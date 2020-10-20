@@ -25,9 +25,21 @@ private:
 	Rect* _pacmanSourceRect;
 	Texture2D* _pacmanTexture;
 	const float _cPacmanSpeed;
+	int _pacmanMoving;
+
+	// Pacman animation
+	int _pacmanDirection;
+	int _pacmanFrame;
+	int _pacmanCurrentFrameTime;
+	const int _cPacmanFrameTime; //keeps the animation speed constant
+
+	//Munchie animation
+	int _munchieFrame;
+	int _munchieCurrentFrameTime;
+	const int _cMunchieFrameTime;
 
 	// Data to represent Munchie
-	int _frameCount;
+	int _munchieFrameCount;
 	Rect* _munchieRect;
 	Texture2D* _munchieBlueTexture;
 	Texture2D* _munchieInvertedTexture;
