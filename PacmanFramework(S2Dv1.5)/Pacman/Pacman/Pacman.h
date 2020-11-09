@@ -14,47 +14,86 @@
 // Reduces the amount of typing by including all classes in S2D namespace
 using namespace S2D;
 
+// Structure Definition
+struct Player
+{
+	// Data to represent Pacman
+	Vector2* position;
+	Rect* sourceRect;
+	Texture2D* texture;
+
+	// Pacman animation
+	int direction;
+	int frame;
+	int currentFrameTime;
+
+};
+
+struct Munchie
+{
+
+	//Munchie animation
+	int frame;
+	int currentFrameTime;
+
+	// Data to represent Munchie
+	int frameCount;
+	Rect* rect;
+	Texture2D* blueTexture;
+	Texture2D* invertedTexture;
+};
+
+struct Menu
+{
+
+	//data for menu
+	Texture2D* background;
+	Rect* rectangle;
+	Vector2* stringPosition;
+	bool paused;
+	bool pKeyDown;
+
+	bool started;
+
+	// Position for String
+	Vector2* _stringPosition;
+};
 // Declares the Pacman class which inherits from the Game class.
 // This allows us to overload the Game class methods to help us
 // load content, draw and update our game.
+//Class Definition
 class Pacman : public Game
 {
 private:
-	// Data to represent Pacman
-	Vector2* _pacmanPosition;
-	Rect* _pacmanSourceRect;
-	Texture2D* _pacmanTexture;
-	const float _cPacmanSpeed;
-	int _pacmanMoving;
+	Player* _pacman;
 
-	// Pacman animation
-	int _pacmanDirection;
-	int _pacmanFrame;
-	int _pacmanCurrentFrameTime;
+	Munchie* _munchie;
+
+	Menu* _menu;
+
+	//cosntant variable data for game
+	const float _cPacmanSpeed;
+
+	//constansts for animation
 	const int _cPacmanFrameTime; //keeps the animation speed constant
 
 	//Munchie animation
-	int _munchieFrame;
-	int _munchieCurrentFrameTime;
 	const int _cMunchieFrameTime;
-
-	// Data to represent Munchie
-	int _munchieFrameCount;
-	Rect* _munchieRect;
-	Texture2D* _munchieBlueTexture;
-	Texture2D* _munchieInvertedTexture;
 
 	// Position for String
 	Vector2* _stringPosition;
 
-	//data for menu
-	Texture2D* _menuBackground;
-	Rect* _menuRectangle;
-	Vector2* _menuStringPosition;
-	bool _paused;
-	bool _pKeyDown;
+	//input method
+	void Input(int elapsedTime, Input::KeyboardState* state);
 
-	bool _start;
+	//check methods
+	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
+	void CheckViewportCollision();
+	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
+
+	//Update methods
+	void UpdatePacman(int elapsedTime);
+	void UpdateMunchie(int elapsedTime);
 
 public:
 	/// <summary> Constructs the Pacman class. </summary>
