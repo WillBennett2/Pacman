@@ -11,6 +11,8 @@
 // Just need to include main header file
 #include "S2D/S2D.h"
 
+#define MUNCHIECOUNT 50
+
 // Reduces the amount of typing by including all classes in S2D namespace
 using namespace S2D;
 
@@ -29,17 +31,19 @@ struct Player
 
 };
 
-struct Munchie
+struct Enemy
 {
 
 	//Munchie animation
 	int frame;
 	int currentFrameTime;
+	int frameTime;
 
-	// Data to represent Munchie
+	// Data to represent Enemy
+	Vector2* position;
 	int frameCount;
 	Rect* rect;
-	Texture2D* blueTexture;
+	Texture2D* texture;
 	Texture2D* invertedTexture;
 };
 
@@ -55,8 +59,6 @@ struct Menu
 
 	bool started;
 
-	// Position for String
-	Vector2* _stringPosition;
 };
 // Declares the Pacman class which inherits from the Game class.
 // This allows us to overload the Game class methods to help us
@@ -67,7 +69,8 @@ class Pacman : public Game
 private:
 	Player* _pacman;
 
-	Munchie* _munchie;
+	Enemy* _munchies[MUNCHIECOUNT];
+	Enemy* _cherry;
 
 	Menu* _menu;
 
@@ -77,8 +80,9 @@ private:
 	//constansts for animation
 	const int _cPacmanFrameTime; //keeps the animation speed constant
 
-	//Munchie animation
+	//Edibles animation
 	const int _cMunchieFrameTime;
+	const int _cCherryFrameTime;
 
 	// Position for String
 	Vector2* _stringPosition;
@@ -93,7 +97,8 @@ private:
 
 	//Update methods
 	void UpdatePacman(int elapsedTime);
-	void UpdateMunchie(int elapsedTime);
+	void UpdateMunchie(Enemy*, int elapsedTime);
+	void UpdateCherry(int elapsedTime);
 
 public:
 	/// <summary> Constructs the Pacman class. </summary>

@@ -3,18 +3,30 @@ using namespace std;
 #include <iostream>
 #include <sstream>
 
-Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_cPacmanFrameTime(250), _cMunchieFrameTime(500)
+Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_cPacmanFrameTime(250), _cMunchieFrameTime(500),_cCherryFrameTime(500)
 {
+	//local variable
+	for (int i = 0; i <MUNCHIECOUNT; i++)
+	{
+		_munchies[i] = new Enemy();
+		_munchies[i]->frameCount = rand() % 1;
+		_munchies[i]->currentFrameTime = 0;
+		_munchies[i]->frameTime = rand() % 500 + 50;
+	
+	}
 	//Initialise member variables
 	_pacman = new Player();
-	_munchie = new Munchie();
+
+	_cherry = new Enemy();
+
 	_menu = new Menu();
 
-	_munchie->frameCount = 0;
+
 	_pacman->currentFrameTime = 0;
 	_pacman->frame = 0;
 
-	_munchie->currentFrameTime = 0;
+	_cherry->frame = 0;
+	_cherry->currentFrameTime = 0;
 
 	_menu ->paused = false;
 	_menu-> pKeyDown = false;
@@ -34,11 +46,20 @@ Pacman::~Pacman() //clearing memory when the program ends
 	delete _pacman->sourceRect;
 	delete _pacman->position;
 	delete _pacman;
+	
+	delete _munchies[0]->texture;
+	for (int nCount = 0; nCount < MUNCHIECOUNT; nCount++)
+	{
+		delete _munchies[nCount]->position;
+		delete _munchies[nCount]->rect;
+		delete _munchies[nCount];
+	}
+	delete[] _munchies;
 
-	delete _munchie->blueTexture;
-	delete _munchie->invertedTexture;
-	delete _munchie->rect;
-	delete _munchie;
+	delete _cherry->texture;
+	delete _cherry->invertedTexture;
+	delete _cherry->rect;
+	delete _cherry;
 
 	delete _menu;
 }
@@ -52,14 +73,27 @@ void Pacman::LoadContent()
 	_pacman->sourceRect = new Rect(0.0f, 0.0f, 32, 32);
 	
 	// Load Munchie
-	_munchie->blueTexture = new Texture2D();
-	_munchie->blueTexture->Load("Textures/Munchie.tga", true);
-	_munchie->invertedTexture = new Texture2D();
-	_munchie->invertedTexture->Load("Textures/MunchieInverted.tga", true);
-	_munchie->rect = new Rect(100.0f, 450.0f, 12, 12);
+	Texture2D* munchieTex = new Texture2D();
+	munchieTex->Load("Textures/Munchie.tga", false);
+	Texture2D* invertedMunchieTex = new Texture2D();
+	invertedMunchieTex->Load("Textures/MunchieInverted.tga", true);
+	for (int i = 0; i < MUNCHIECOUNT; i++)
+	{
+		_munchies[i]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+
+		_munchies[i]->texture = munchieTex;
+		_munchies[i]->invertedTexture = invertedMunchieTex;
+		_munchies[i]->rect = new Rect(100.0f, 450.0f, 12, 12);
+	}
+	//load Cherry
+	_cherry->texture = new Texture2D();
+	_cherry->texture->Load("Textures/Cherry.png", true);
+	_cherry->invertedTexture = new Texture2D();
+	_cherry->invertedTexture->Load("Textures/CherryInverted.png", true);
+	_cherry->rect = new Rect(200.0f, 450.0f, 28, 28);
 
 	// Set string position
-	_menu->_stringPosition = new Vector2(10.0f, 25.0f);
+	_stringPosition = new Vector2(10.0f, 25.0f);
 
 	// Set Menu Paramters
 	_menu->background = new Texture2D();
@@ -87,7 +121,9 @@ void Pacman::Update(int elapsedTime)
 		{
 			Input(elapsedTime, keyboardState);
 			UpdatePacman(elapsedTime);
-			UpdateMunchie(elapsedTime);
+			for (int i= 0; i < MUNCHIECOUNT; i++)
+				UpdateMunchie(_munchies[i],elapsedTime);
+			UpdateCherry(elapsedTime);
 			CheckViewportCollision();
 		}
 	}
@@ -173,8 +209,9 @@ void Pacman::UpdatePacman(int elapsedTime)
 	_pacman->sourceRect->X = _pacman->sourceRect->Width * _pacman->frame; //opens and closes mouth.
 	_pacman->sourceRect->Y = _pacman->sourceRect->Height * _pacman->direction; //rotates pacman.
 }
-void Pacman::UpdateMunchie(int elapsedTime)
+void Pacman::UpdateMunchie(Enemy*_munchie, int elapsedTime)
 {
+
 	_munchie->currentFrameTime += elapsedTime;
 	if (_munchie->currentFrameTime > _cMunchieFrameTime)
 	{
@@ -182,6 +219,19 @@ void Pacman::UpdateMunchie(int elapsedTime)
 		if (_munchie->frameCount >= 2)
 			_munchie->frameCount = 0;
 		_munchie->currentFrameTime = 0;
+
+	}
+}
+
+void Pacman::UpdateCherry(int elapsedTime)
+{
+	_cherry->currentFrameTime += elapsedTime;
+	if (_cherry->currentFrameTime > _cMunchieFrameTime)
+	{
+		_cherry->frameCount++;
+		if (_cherry->frameCount >= 2)
+			_cherry->frameCount = 0;
+		_cherry->currentFrameTime = 0;
 	}
 }
 
@@ -216,34 +266,53 @@ void Pacman::Draw(int elapsedTime)
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
 	SpriteBatch::Draw(_pacman->texture, _pacman->position, _pacman->sourceRect); // Draws Pacman
-
-	if (_munchie->frameCount == 0)
+	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
-		// Draws Red Munchie
-		SpriteBatch::Draw(_munchie->invertedTexture, _munchie->rect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		if (_munchies[i]->frameCount == 0)
+		{
+			// Draws Red Munchie
+			SpriteBatch::Draw(_munchies[i]->invertedTexture, _munchies[i]->rect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+		}
+		else
+		{
+			// Draw Blue Munchie
+			SpriteBatch::Draw(_munchies[i]->texture, _munchies[i]->rect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+
+			_munchies[i]->frameCount++;
+			if (_munchies[i]->frameCount >= 60)
+				_munchies[i]->frameCount = 0;
+
+		}
+	}
+
+	if (_cherry->frameCount == 0) 
+	{
+		SpriteBatch::Draw(_cherry->invertedTexture, _cherry->rect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
 	}
 	else
 	{
 		// Draw Blue Munchie
-		SpriteBatch::Draw(_munchie->blueTexture, _munchie->rect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
-		
-		_munchie->frameCount++;
-		if (_munchie->frameCount >= 60)
-			_munchie->frameCount = 0;
+		SpriteBatch::Draw(_cherry->texture, _cherry->rect, nullptr, Vector2::Zero, 1.0f, 0.0f, Color::White, SpriteEffect::NONE);
+
+		_cherry->frameCount++;
+		if (_cherry->frameCount >= 60)
+			_cherry->frameCount = 0;
 
 	}
 	
 	// Draws String
-	SpriteBatch::DrawString(stream.str().c_str(), _menu->_stringPosition, Color::Green);
+	SpriteBatch::DrawString(stream.str().c_str(), _stringPosition, Color::Green);
 	if (!_menu->started)
 	{
 		std::stringstream menuStream;
 		menuStream << "Start screen!";
 		SpriteBatch::Draw(_menu->background, _menu->rectangle, nullptr);
 		SpriteBatch::DrawString(menuStream.str().c_str(), _menu->stringPosition, Color::Green);
-
-		_munchie->frameCount++;
-	}
+		for (int i = 0; i < MUNCHIECOUNT; i++)
+		{
+			_munchies[i]->frameCount++;
+		}
+	}	
 
 	if (_menu->paused)
 	{
@@ -251,8 +320,11 @@ void Pacman::Draw(int elapsedTime)
 		menuStream << "PAUSED!";
 		SpriteBatch::Draw(_menu->background, _menu->rectangle, nullptr);
 		SpriteBatch::DrawString(menuStream.str().c_str(), _menu->stringPosition, Color::Red);
-
-		_munchie->frameCount++;
+		for (int i = 0; i < MUNCHIECOUNT; i++)
+		{
+			_munchies[i]->frameCount++;
+		}
+		_cherry->frameCount++;
 	}
 	SpriteBatch::EndDraw(); // Ends Drawing
 }
