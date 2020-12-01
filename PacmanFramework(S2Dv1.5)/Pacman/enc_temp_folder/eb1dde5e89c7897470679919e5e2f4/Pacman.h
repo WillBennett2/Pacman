@@ -26,12 +26,9 @@ struct Player
 	Rect* sourceRect;
 	Texture2D* texture;
 	bool dead;
-	bool moving;
-
 
 	// Pacman animation
 	int direction;
-	int previousDirection;
 	float speedMulitplier;
 	char collision;
 
@@ -81,10 +78,10 @@ struct Menu
 
 struct WallCoord
 {
-	int X;
-	int Y;
-	int width;
-	int height;
+	int leftX;
+	int rightX;
+	int upY;
+	int downY;
 
 };
 struct Walls
@@ -108,7 +105,7 @@ private:
 
 	Walls* _walls;
 	WallCoord* _wallCoord[WALLCOUNT];
-	int wallArray[45][4];
+	int wallArray[45][8];
 
 	//cosntant variable data for game
 	const float _cPacmanSpeed;
@@ -132,7 +129,7 @@ private:
 	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 	bool CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2);
 	void CheckGhostCollision();
-	bool CheckWallCollision(int x1, int y1, int width1, int height1);
+	bool CheckWallCollision();
 
 	void LoadWallCoord();
 	//Update methods

@@ -24,8 +24,6 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	//Initialise member variables
 	_pacman = new Player();
 	_pacman->dead = false;
-	_pacman->moving = true;
-	_pacman->previousDirection = -1;
 
 	_cherry = new Enemy();
 
@@ -114,7 +112,7 @@ void Pacman::LoadContent()
 			break;
 		}
 		_ghosts[i]->texture = GhostTex;
-		_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
+		_ghosts[i]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
 		_ghosts[i]->sourceRect = new Rect(0.0f, 0.7f, 20, 20);
 
 
@@ -150,11 +148,10 @@ void Pacman::LoadContent()
 	_walls->texture->Load("Textures/Map.png", true);
 	_walls->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
 	// Set wall positions
-	LoadWallCoord();
-	_wallCoord[0]->X = wallArray[0][0];
-	_wallCoord[0]->Y = wallArray[0][1];
-	_wallCoord[0]->width = wallArray[0][2];
-	_wallCoord[0]->height = wallArray[0][3];
+	_wallCoord[0]->x = wallArray[1][0];
+	_wallCoord[0]->y = wallArray[1][1];
+	_wallCoord[0]->width = wallArray[1][2];
+	_wallCoord[0]->height = wallArray[1][3];
 	// Set Menu Paramters
 	_menu->background = new Texture2D();
 	_menu->background->Load("Textures/Transparency.png", false);
@@ -193,25 +190,17 @@ void Pacman::Update(int elapsedTime)
 			Input(elapsedTime, keyboardState, mouseState);
 			if (_menu->randomised)
 				_menu->randomised = false;
-
-			if (_pacman->direction == _pacman->previousDirection)
-
-				_pacman->previousDirection = -1;
-
-				if (CheckWallCollision(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height))
-				{
-					_pacman->previousDirection = _pacman->direction;
-					_pacman->moving = false;
-				}
-
 			UpdatePacman(elapsedTime);
 			for (int i = 0; i < GHOSTCOUNT; i++) 
 			{
-				if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height) )
+				if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height) )
 				{
-					//UpdateGhost(_ghosts[i], elapsedTime);
 				}
 					
+				else
+				{
+					UpdateGhost(_ghosts[i], elapsedTime);
+				}
 				CheckGhostCollision();
 
 			}
@@ -299,32 +288,28 @@ void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseStat
 		_pacman->direction = 1;
 	}
 
-	if ( _pacman->previousDirection != _pacman->direction||_pacman->moving ==true )
-		//_pacman->previousDirection = -1;
-		switch (_pacman->direction)
-		{
-		case 4:
-			_pacman->position->X += pacmanSpeed; //Moves Pacman across X axis(right)
-			_pacman->direction = 4;//rotating pacman right 
-			break;
-		case 2:
-			_pacman->position->X -= pacmanSpeed;//Moves Pacman across X axis(left)
-			_pacman->direction = 2;//rotating pacman left 
-			break;
-		case 3:
-			_pacman->position->Y -= pacmanSpeed;//Moves Pacman across Y axis(up)
-			_pacman->direction = 3;//rotating pacman up 
-			break;
-		case 1:
-			_pacman->position->Y += pacmanSpeed;//Moves Pacman across Y axis(down)
-			_pacman->direction = 1;//rotating pacman down 
-			break;
+	switch (_pacman->direction)
+	{
+	case 4:
+		_pacman->position->X += pacmanSpeed; //Moves Pacman across X axis(right)
+		_pacman->direction = 4;//rotating pacman right 
+		break;
+	case 2:
+		_pacman->position->X -= pacmanSpeed;//Moves Pacman across X axis(left)
+		_pacman->direction = 2;//rotating pacman left 
+		break;
+	case 3:
+		_pacman->position->Y -= pacmanSpeed;//Moves Pacman across Y axis(up)
+		_pacman->direction = 3;//rotating pacman up 
+		break;
+	case 1:
+		_pacman->position->Y += pacmanSpeed;//Moves Pacman across Y axis(down)
+		_pacman->direction = 1;//rotating pacman down 
+		break;
 
-		default:
-			break;
-		}
-	_pacman->moving = true;
-	
+	default:
+		break;
+	}
 }
 
 void Pacman::CheckPaused(Input::KeyboardState*state , Input::Keys pauseKey)
@@ -490,20 +475,18 @@ bool Pacman::CheckWallCollision(int x1, int y1, int width1, int height1)
 	int right1 = x1 + width1;
 	int right2 = 0;
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		top2 = _wallCoord[0]->Y;
-		bottom2 = _wallCoord[0]->Y + _wallCoord[i]->height;
-		left2 = _wallCoord[0]->X;
-		right2 = _wallCoord[0]->X + _wallCoord[i]->width;
+		top2 = _wallCoord[i]->y;
+		bottom2 = _wallCoord[i]->y + _wallCoord[i]->height;
+		left2 = _wallCoord[i]->x;
+		right2 = _wallCoord[i]->x + _wallCoord[i]->width;
 
 		if ((bottom1 > top2) && (top1 < bottom2) && (right1 > left2) && (left1 < right2))
 		{
 			return true;
 			i = WALLCOUNT;
 		}
-		else
-			return false;
 	}
 }
 void Pacman::Draw(int elapsedTime)

@@ -26,12 +26,9 @@ struct Player
 	Rect* sourceRect;
 	Texture2D* texture;
 	bool dead;
-	bool moving;
-
 
 	// Pacman animation
 	int direction;
-	int previousDirection;
 	float speedMulitplier;
 	char collision;
 
@@ -81,8 +78,7 @@ struct Menu
 
 struct WallCoord
 {
-	int X;
-	int Y;
+	Vector2* position;
 	int width;
 	int height;
 
