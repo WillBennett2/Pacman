@@ -348,7 +348,8 @@ void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseStat
 		_cherry->position->Y = mouseState->Y;
 	}*/
 
-	if (state->IsKeyDown(Input::Keys::D) || state->IsKeyDown(Input::Keys::RIGHT)) { // Checks if D/right key is pressed
+	if (state->IsKeyDown(Input::Keys::D) || state->IsKeyDown(Input::Keys::RIGHT))
+	{ // Checks if D/right key is pressed
 				//_pacmanPosition->X += _cPacmanSpeed * elapsedTime; //Moves Pacman across X axis
 		_pacman->direction = 4;//variable used for switch statements to keep pacman once a direction has been picked
 	}
