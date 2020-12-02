@@ -18,8 +18,6 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	{
 		_ghosts[i] = new MovingEnemy();
 		_ghosts[i]->direction = 0;
-		_ghosts[i]->previousDirection = -1;
-		_ghosts[i]->moving = true;
 		_ghosts[i]->speed = 0.2f;
 	}
 	
@@ -125,6 +123,8 @@ void Pacman::LoadContent()
 		_ghosts[i]->texture = GhostTex;
 		//_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
 		_ghosts[i]->sourceRect = new Rect(0.0f, 0.7f, 20, 20);
+		_ghosts[i]->previousDirection = -1;
+		_ghosts[i]->moving = true;
 
 
 	}
@@ -266,13 +266,10 @@ void Pacman::Update(int elapsedTime)
 			{
 				if (_ghosts[i]->moving == true)
 				{
+					_ghosts[i]->previousDirection = _ghosts[i]->direction;
+
 					if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
-					{
 						_ghosts[i]->moving = false;
-						UpdateGhost(_ghosts[i], elapsedTime);
-					}
-					else
-						UpdateGhost(_ghosts[i], elapsedTime);
 				}
 				else if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
 				{
@@ -436,29 +433,10 @@ void Pacman::UpdateGhost(MovingEnemy*ghost, int elapsedTime)
 		ghost->position->X -= ghost->speed * elapsedTime;
 		ghost->sourceRect = new Rect(0.0f, 66.7f, 20, 23);
 	}
-	int count = 0;
-	if (ghost->moving == false)
-	{
-		switch (count)
-		{
-		case(0):
-			ghost->direction = 1;
-			break;
-		case(1):
-			ghost->direction = 0;
-		default:
-			break;
-		}
-		count++;
-		if (count > 1)
-			count = 0;
-		ghost->moving = true;
-	}
-
-	//if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge
-		//ghost->direction = 1;//change direction
-	//else if (ghost->position->X <= 0)//hits left edge
-		//ghost->direction = 0;//change direction
+	if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge
+		ghost->direction = 1;//change direction
+	else if (ghost->position->X <= 0)//hits left edge
+		ghost->direction = 0;//change direction
 }
 void Pacman::UpdateMunchie(Enemy*_munchie, int elapsedTime)
 {

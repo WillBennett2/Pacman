@@ -32,6 +32,7 @@ struct Player
 	// Pacman animation
 	int direction;
 	int previousDirection;
+
 	float speedMulitplier;
 	char collision;
 
@@ -61,6 +62,8 @@ struct MovingEnemy
 	Texture2D* texture;
 	Rect* sourceRect;
 	int direction;
+	int previousDirection;
+	bool moving;
 	float speed;
 };
 

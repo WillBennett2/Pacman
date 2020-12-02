@@ -18,8 +18,6 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	{
 		_ghosts[i] = new MovingEnemy();
 		_ghosts[i]->direction = 0;
-		_ghosts[i]->previousDirection = -1;
-		_ghosts[i]->moving = true;
 		_ghosts[i]->speed = 0.2f;
 	}
 	
@@ -97,7 +95,7 @@ void Pacman::LoadContent()
 	_pacman->texture = new Texture2D();
 	_pacman->texture->Load("Textures/Pacman.png", false);
 	_pacman->position = new Vector2(350.0f, 350.0f);
-	_pacman->sourceRect = new Rect(0.0f, 0.5f, 33, 32);
+	_pacman->sourceRect = new Rect(0.0f, 0.5f, 33, 32.8);
 
 	// Load ghost
 	for (int i = 0; i< GHOSTCOUNT; i++)
@@ -107,23 +105,19 @@ void Pacman::LoadContent()
 		{
 		case(0):
 			GhostTex->Load("Textures/Red.png", false);
-			_ghosts[i]->position = new Vector2((430), (380));
 			break;
 		case(1):
 			GhostTex->Load("Textures/Cyan.png", false);
-			_ghosts[i]->position = new Vector2((475), (380));
 			break;
 		case(2):
 			GhostTex->Load("Textures/Pink.png", false);
-			_ghosts[i]->position = new Vector2((520), (380));
 			break;
 		case(3):
 			GhostTex->Load("Textures/Orange.png", false);
-			_ghosts[i]->position = new Vector2((560), (380));
 			break;
 		}
 		_ghosts[i]->texture = GhostTex;
-		//_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
+		_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
 		_ghosts[i]->sourceRect = new Rect(0.0f, 0.7f, 20, 20);
 
 
@@ -212,18 +206,8 @@ void Pacman::LoadWallCoord()
 	wallArray[21][0] = 374, wallArray[21][1] = 182, wallArray[21][2] = 274, wallArray[21][3] = 39;
 	wallArray[22][0] = 487, wallArray[22][1] = 221, wallArray[22][2] = 49, wallArray[22][3] = 68;
 	
-	wallArray[23][0] = 80, wallArray[23][1] = 188, wallArray[23][2] = 121, wallArray[23][3] = 47;
-	wallArray[24][0] = 820, wallArray[24][1] = 188, wallArray[24][2] = 121, wallArray[24][3] = 47;
 
-	
 	//cage for ghosts
-	wallArray[25][0] = 374, wallArray[25][1] = 326, wallArray[25][2] = 110, wallArray[25][3] = 23;
-	wallArray[26][0] = 547, wallArray[26][1] = 326, wallArray[26][2] = 110, wallArray[26][3] = 23;
-
-	wallArray[27][0] = 374, wallArray[27][1] = 334, wallArray[27][2] = 32, wallArray[27][3] = 99;
-	wallArray[28][0] = 618, wallArray[28][1] = 334, wallArray[28][2] = 32, wallArray[28][3] = 99;
-
-	wallArray[29][0] = 385, wallArray[29][1] = 416, wallArray[29][2] = 253, wallArray[29][3] = 24;
 
 	//bottom inner half
 
@@ -261,25 +245,13 @@ void Pacman::Update(int elapsedTime)
 				_pacman->moving = true;
 
 			UpdatePacman(elapsedTime);
-
 			for (int i = 0; i < GHOSTCOUNT; i++) 
 			{
-				if (_ghosts[i]->moving == true)
+				if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height) )
 				{
-					if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
-					{
-						_ghosts[i]->moving = false;
-						UpdateGhost(_ghosts[i], elapsedTime);
-					}
-					else
-						UpdateGhost(_ghosts[i], elapsedTime);
+					//UpdateGhost(_ghosts[i], elapsedTime);
 				}
-				else if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
-				{
-					_ghosts[i]->moving = true;
-					UpdateGhost(_ghosts[i], elapsedTime);
-				}
-
+					
 				CheckGhostCollision();
 
 			}
@@ -436,29 +408,10 @@ void Pacman::UpdateGhost(MovingEnemy*ghost, int elapsedTime)
 		ghost->position->X -= ghost->speed * elapsedTime;
 		ghost->sourceRect = new Rect(0.0f, 66.7f, 20, 23);
 	}
-	int count = 0;
-	if (ghost->moving == false)
-	{
-		switch (count)
-		{
-		case(0):
-			ghost->direction = 1;
-			break;
-		case(1):
-			ghost->direction = 0;
-		default:
-			break;
-		}
-		count++;
-		if (count > 1)
-			count = 0;
-		ghost->moving = true;
-	}
-
-	//if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge
-		//ghost->direction = 1;//change direction
-	//else if (ghost->position->X <= 0)//hits left edge
-		//ghost->direction = 0;//change direction
+	if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge
+		ghost->direction = 1;//change direction
+	else if (ghost->position->X <= 0)//hits left edge
+		ghost->direction = 0;//change direction
 }
 void Pacman::UpdateMunchie(Enemy*_munchie, int elapsedTime)
 {

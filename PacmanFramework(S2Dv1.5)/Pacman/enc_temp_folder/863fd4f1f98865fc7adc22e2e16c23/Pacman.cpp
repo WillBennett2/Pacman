@@ -18,8 +18,6 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	{
 		_ghosts[i] = new MovingEnemy();
 		_ghosts[i]->direction = 0;
-		_ghosts[i]->previousDirection = -1;
-		_ghosts[i]->moving = true;
 		_ghosts[i]->speed = 0.2f;
 	}
 	
@@ -34,10 +32,7 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	_menu = new Menu();
 
 	_walls = new Walls();
-	for (int i = 0; i <WALLCOUNT; i++)
-	{
-		_wallCoord[i] = new WallCoord();
-	}
+	_wallCoord[0] = new WallCoord();
 
 	_cherry->frame = 0;
 	_cherry->currentFrameTime = 0;
@@ -97,7 +92,7 @@ void Pacman::LoadContent()
 	_pacman->texture = new Texture2D();
 	_pacman->texture->Load("Textures/Pacman.png", false);
 	_pacman->position = new Vector2(350.0f, 350.0f);
-	_pacman->sourceRect = new Rect(0.0f, 0.5f, 33, 32);
+	_pacman->sourceRect = new Rect(0.5f, 0.5f, 35, 36);
 
 	// Load ghost
 	for (int i = 0; i< GHOSTCOUNT; i++)
@@ -107,23 +102,19 @@ void Pacman::LoadContent()
 		{
 		case(0):
 			GhostTex->Load("Textures/Red.png", false);
-			_ghosts[i]->position = new Vector2((430), (380));
 			break;
 		case(1):
 			GhostTex->Load("Textures/Cyan.png", false);
-			_ghosts[i]->position = new Vector2((475), (380));
 			break;
 		case(2):
 			GhostTex->Load("Textures/Pink.png", false);
-			_ghosts[i]->position = new Vector2((520), (380));
 			break;
 		case(3):
 			GhostTex->Load("Textures/Orange.png", false);
-			_ghosts[i]->position = new Vector2((560), (380));
 			break;
 		}
 		_ghosts[i]->texture = GhostTex;
-		//_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
+		_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
 		_ghosts[i]->sourceRect = new Rect(0.0f, 0.7f, 20, 20);
 
 
@@ -137,11 +128,11 @@ void Pacman::LoadContent()
 	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
 		_munchies[i]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+
 		_munchies[i]->texture = munchieTex;
 		_munchies[i]->invertedTexture = invertedMunchieTex;
 		_munchies[i]->sourceRect = new Rect(_munchies[i]->position->X, _munchies[i]->position->Y, 12, 12);
 	}
-
 	//load Cherry
 	_cherry->texture = new Texture2D();
 	_cherry->texture->Load("Textures/Cherry.png", true);
@@ -158,18 +149,12 @@ void Pacman::LoadContent()
 	_walls->texture = new Texture2D();
 	_walls->texture->Load("Textures/Map.png", true);
 	_walls->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
-
 	// Set wall positions
 	LoadWallCoord();
-	for (int i = 0; i < WALLCOUNT; i++)
-	{
-		_wallCoord[i]->X = wallArray[i][0];
-		_wallCoord[i]->Y = wallArray[i][1];
-		_wallCoord[i]->width = wallArray[i][2];
-		_wallCoord[i]->height = wallArray[i][3];
-	}
-
-
+	_wallCoord[0]->X = wallArray[3][0];
+	_wallCoord[0]->Y = wallArray[3][1];
+	_wallCoord[0]->width = wallArray[3][2];
+	_wallCoord[0]->height = wallArray[3][3];
 	// Set Menu Paramters
 	_menu->background = new Texture2D();
 	_menu->background->Load("Textures/Transparency.png", false);
@@ -179,53 +164,12 @@ void Pacman::LoadContent()
 }
 void Pacman::LoadWallCoord()
 {
-	int windowWidth = Graphics::GetViewportWidth();
 	//left x y width height
-	// outer rim
-	wallArray[0][0] = 0, wallArray[0][1] = 0, wallArray[0][2] = windowWidth, wallArray[0][3] = 21;
-	wallArray[1][0] = 0, wallArray[1][1] = 21, wallArray[1][2] = 29, wallArray[1][3] = 251;
-	wallArray[2][0] = windowWidth - 32, wallArray[2][1] = 21, wallArray[2][2] = 29, wallArray[2][3] = 251;
+	wallArray[0][0] = 0, wallArray[0][1]= 0, wallArray[0][3] = Graphics::GetViewportWidth(), wallArray[0][2]= 21;
+	wallArray[1][0]=0, wallArray[1][1]=21, wallArray[1][2]=29, wallArray[1][3]=251;
+	wallArray[2][0]= Graphics::GetViewportWidth() - 32, wallArray[2][1]= 21, wallArray[2][2]=29, wallArray[2][3]=251;
 	wallArray[3][0] = 0, wallArray[3][1] = 272, wallArray[3][2] = 191, wallArray[3][3] = 78;
 	wallArray[4][0] = 829, wallArray[4][1] = 272, wallArray[4][2] = 191, wallArray[4][3] = 78;
-	wallArray[5][0] = 487, wallArray[5][1] = 21, wallArray[5][2] = 49, wallArray[5][3] = 116;
-
-	wallArray[6][0] = 0, wallArray[6][1] = 408, wallArray[6][2] = 191, wallArray[6][3] = 78;
-	wallArray[7][0] = 829, wallArray[7][1] = 408, wallArray[7][2] = 191, wallArray[7][3] = 78;
-	wallArray[8][0] = 0, wallArray[8][1] = 486, wallArray[8][2] = 29, wallArray[8][3] = 258;
-	wallArray[9][0] = 0, wallArray[9][1] = 615, wallArray[9][2] = 29, wallArray[9][3] = 258;
-	wallArray[10][0] = 21, wallArray[10][1] = 615, wallArray[10][2] = 80, wallArray[10][3] = 39;
-	wallArray[11][0] = 923, wallArray[11][1] = 615, wallArray[11][2] = 80, wallArray[11][3] = 39;
-	wallArray[12][0] = 0, wallArray[12][1] = 743, wallArray[12][2] = windowWidth, wallArray[12][3] = 21;
-
-	// top inner half
-	wallArray[13][0] = 81, wallArray[13][1] = 51, wallArray[13][2] = 111, wallArray[13][3] = 84;
-	wallArray[14][0] = 252, wallArray[14][1] = 51, wallArray[14][2] = 184, wallArray[14][3] = 84;
-	wallArray[15][0] = 587, wallArray[15][1] = 51, wallArray[15][2] = 184, wallArray[15][3] = 84;
-	wallArray[16][0] = 830, wallArray[16][1] = 51, wallArray[16][2] = 111, wallArray[16][3] = 84;
-
-	wallArray[17][0] = 263, wallArray[17][1] = 190, wallArray[17][2] = 51, wallArray[17][3] = 161;
-	wallArray[18][0] = 303, wallArray[18][1] = 258, wallArray[18][2] = 133, wallArray[18][3] = 30;
-
-	wallArray[19][0] = 709, wallArray[19][1] = 190, wallArray[19][2] = 51, wallArray[19][3] = 161;
-	wallArray[20][0] = 587, wallArray[20][1] = 258, wallArray[20][2] = 133, wallArray[20][3] = 30;
-
-	wallArray[21][0] = 374, wallArray[21][1] = 182, wallArray[21][2] = 274, wallArray[21][3] = 39;
-	wallArray[22][0] = 487, wallArray[22][1] = 221, wallArray[22][2] = 49, wallArray[22][3] = 68;
-	
-	wallArray[23][0] = 80, wallArray[23][1] = 188, wallArray[23][2] = 121, wallArray[23][3] = 47;
-	wallArray[24][0] = 820, wallArray[24][1] = 188, wallArray[24][2] = 121, wallArray[24][3] = 47;
-
-	
-	//cage for ghosts
-	wallArray[25][0] = 374, wallArray[25][1] = 326, wallArray[25][2] = 110, wallArray[25][3] = 23;
-	wallArray[26][0] = 547, wallArray[26][1] = 326, wallArray[26][2] = 110, wallArray[26][3] = 23;
-
-	wallArray[27][0] = 374, wallArray[27][1] = 334, wallArray[27][2] = 32, wallArray[27][3] = 99;
-	wallArray[28][0] = 618, wallArray[28][1] = 334, wallArray[28][2] = 32, wallArray[28][3] = 99;
-
-	wallArray[29][0] = 385, wallArray[29][1] = 416, wallArray[29][2] = 253, wallArray[29][3] = 24;
-
-	//bottom inner half
 
 }
 
@@ -250,36 +194,29 @@ void Pacman::Update(int elapsedTime)
 			if (_menu->randomised)
 				_menu->randomised = false;
 
+			cout << _pacman->moving;
 			if (_pacman->moving == true)
 			{
 				_pacman->previousDirection = _pacman->direction;
 
 				if (CheckWallCollision(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height))
+				{
+					cout << "collision checked";
+					//_pacman->previousDirection = _pacman->direction;
 					_pacman->moving = false;
+				}
 			}
 			else if (!CheckWallCollision(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height))
 				_pacman->moving = true;
 
 			UpdatePacman(elapsedTime);
-
 			for (int i = 0; i < GHOSTCOUNT; i++) 
 			{
-				if (_ghosts[i]->moving == true)
+				if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height) )
 				{
-					if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
-					{
-						_ghosts[i]->moving = false;
-						UpdateGhost(_ghosts[i], elapsedTime);
-					}
-					else
-						UpdateGhost(_ghosts[i], elapsedTime);
+					//UpdateGhost(_ghosts[i], elapsedTime);
 				}
-				else if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
-				{
-					_ghosts[i]->moving = true;
-					UpdateGhost(_ghosts[i], elapsedTime);
-				}
-
+					
 				CheckGhostCollision();
 
 			}
@@ -436,29 +373,10 @@ void Pacman::UpdateGhost(MovingEnemy*ghost, int elapsedTime)
 		ghost->position->X -= ghost->speed * elapsedTime;
 		ghost->sourceRect = new Rect(0.0f, 66.7f, 20, 23);
 	}
-	int count = 0;
-	if (ghost->moving == false)
-	{
-		switch (count)
-		{
-		case(0):
-			ghost->direction = 1;
-			break;
-		case(1):
-			ghost->direction = 0;
-		default:
-			break;
-		}
-		count++;
-		if (count > 1)
-			count = 0;
-		ghost->moving = true;
-	}
-
-	//if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge
-		//ghost->direction = 1;//change direction
-	//else if (ghost->position->X <= 0)//hits left edge
-		//ghost->direction = 0;//change direction
+	if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge
+		ghost->direction = 1;//change direction
+	else if (ghost->position->X <= 0)//hits left edge
+		ghost->direction = 0;//change direction
 }
 void Pacman::UpdateMunchie(Enemy*_munchie, int elapsedTime)
 {
@@ -570,7 +488,7 @@ void Pacman::CheckGhostCollision()
 }
 bool Pacman::CheckWallCollision(int x1, int y1, int width1, int height1)
 {
-	bool collision = false;
+
 	int top1 =y1;
 	int top2 = 0;
 	int bottom1 =y1+height1;
@@ -580,22 +498,22 @@ bool Pacman::CheckWallCollision(int x1, int y1, int width1, int height1)
 	int right1 = x1 + width1;
 	int right2 = 0;
 
-	for (int i = 0; i < WALLCOUNT; i++)
+	for (int i = 0; i < 1; i++)
 	{
-		top2 = _wallCoord[i]->Y;
-		bottom2 = _wallCoord[i]->Y + _wallCoord[i]->height;
-		left2 = _wallCoord[i]->X;
-		right2 = _wallCoord[i]->X + _wallCoord[i]->width;
+		top2 = _wallCoord[0]->Y;
+		bottom2 = _wallCoord[0]->Y + _wallCoord[i]->height;
+		left2 = _wallCoord[0]->X;
+		right2 = _wallCoord[0]->X + _wallCoord[i]->width;
 
 		if ((bottom1 > top2) && (top1 < bottom2) && (right1 > left2) && (left1 < right2))
 		{
-			i = WALLCOUNT;
 			return true;
+			i = WALLCOUNT;
 		}
+		else
+			return false;
 	}
-	return collision;
 }
-
 void Pacman::Draw(int elapsedTime)
 {
 	// Allows us to easily create a string

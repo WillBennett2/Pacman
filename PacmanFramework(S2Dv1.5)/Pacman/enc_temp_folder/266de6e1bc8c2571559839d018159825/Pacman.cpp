@@ -264,22 +264,15 @@ void Pacman::Update(int elapsedTime)
 
 			for (int i = 0; i < GHOSTCOUNT; i++) 
 			{
-				if (_ghosts[i]->moving == true)
+				if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
 				{
-					if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
-					{
-						_ghosts[i]->moving = false;
-						UpdateGhost(_ghosts[i], elapsedTime);
-					}
-					else
-						UpdateGhost(_ghosts[i], elapsedTime);
+					_ghosts[i]->moving = false;
 				}
 				else if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
 				{
 					_ghosts[i]->moving = true;
-					UpdateGhost(_ghosts[i], elapsedTime);
 				}
-
+				UpdateGhost(_ghosts[i], elapsedTime);
 				CheckGhostCollision();
 
 			}
@@ -437,7 +430,7 @@ void Pacman::UpdateGhost(MovingEnemy*ghost, int elapsedTime)
 		ghost->sourceRect = new Rect(0.0f, 66.7f, 20, 23);
 	}
 	int count = 0;
-	if (ghost->moving == false)
+	if (ghost->moving = false)
 	{
 		switch (count)
 		{
@@ -452,7 +445,6 @@ void Pacman::UpdateGhost(MovingEnemy*ghost, int elapsedTime)
 		count++;
 		if (count > 1)
 			count = 0;
-		ghost->moving = true;
 	}
 
 	//if (ghost->position->X + ghost->sourceRect->Width >= Graphics::GetViewportWidth())//hits right edge

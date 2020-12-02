@@ -271,15 +271,13 @@ void Pacman::Update(int elapsedTime)
 						_ghosts[i]->moving = false;
 						UpdateGhost(_ghosts[i], elapsedTime);
 					}
-					else
-						UpdateGhost(_ghosts[i], elapsedTime);
 				}
 				else if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
 				{
 					_ghosts[i]->moving = true;
 					UpdateGhost(_ghosts[i], elapsedTime);
 				}
-
+				//UpdateGhost(_ghosts[i], elapsedTime);
 				CheckGhostCollision();
 
 			}
