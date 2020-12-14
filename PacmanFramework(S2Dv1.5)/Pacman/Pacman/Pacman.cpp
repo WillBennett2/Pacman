@@ -3,7 +3,7 @@ using namespace std;
 #include <iostream>
 #include <sstream>
 
-Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_cPacmanFrameTime(250), _cMunchieFrameTime(500),_cCherryFrameTime(500)
+Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_cPacmanFrameTime(150), _cMunchieFrameTime(500),_cCherryFrameTime(500)
 {
 	//local variable
 	for (int i = 0; i <MUNCHIECOUNT; i++)
@@ -38,7 +38,7 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	{
 		_wallCoord[i] = new WallCoord();
 	}
-
+	
 	_cherry->frame = 0;
 	_cherry->currentFrameTime = 0;
 
@@ -88,6 +88,13 @@ Pacman::~Pacman() //clearing memory when the program ends
 	delete _menu;
 
 	delete _walls->texture;
+	for (int nCount = 0; nCount < WALLCOUNT; nCount++)
+	{
+		delete _wallCoord[nCount];
+
+	}
+	delete[] _wallCoord;
+
 	delete _walls;
 }
 
@@ -96,7 +103,7 @@ void Pacman::LoadContent()
 	// Load Pacman
 	_pacman->texture = new Texture2D();
 	_pacman->texture->Load("Textures/Pacman.png", false);
-	_pacman->position = new Vector2(350.0f, 350.0f);
+	_pacman->position = new Vector2(517.0f, 443.0f);
 	_pacman->sourceRect = new Rect(0.0f, 0.5f, 33, 32);
 
 	// Load ghost
@@ -152,7 +159,7 @@ void Pacman::LoadContent()
 	_cherry->sourceRect = new Rect(_cherry->position->X, _cherry->position->Y, 28, 28);
 
 	// Set string position
-	_stringPosition = new Vector2(10.0f, 25.0f);
+	_stringPosition = new Vector2(11.0f, 25.0f);
 
 	// Set walls image 
 	_walls->texture = new Texture2D();
@@ -179,46 +186,54 @@ void Pacman::LoadContent()
 }
 void Pacman::LoadWallCoord()
 {
+	//defining wall coords, widths, and heights of all the wall to create a box collider
+	//ARRAY STRUCTURE: [0][0] = x, [0][1] = y, [0][2] = width, [0][3] = height
 	int windowWidth = Graphics::GetViewportWidth();
-	//left x y width height
+
 	// outer rim
 	wallArray[0][0] = 0, wallArray[0][1] = 0, wallArray[0][2] = windowWidth, wallArray[0][3] = 21;
 	wallArray[1][0] = 0, wallArray[1][1] = 21, wallArray[1][2] = 29, wallArray[1][3] = 251;
 	wallArray[2][0] = windowWidth - 32, wallArray[2][1] = 21, wallArray[2][2] = 29, wallArray[2][3] = 251;
 	wallArray[3][0] = 0, wallArray[3][1] = 272, wallArray[3][2] = 191, wallArray[3][3] = 78;
+
 	wallArray[4][0] = 829, wallArray[4][1] = 272, wallArray[4][2] = 191, wallArray[4][3] = 78;
 	wallArray[5][0] = 487, wallArray[5][1] = 21, wallArray[5][2] = 49, wallArray[5][3] = 116;
 
 	wallArray[6][0] = 0, wallArray[6][1] = 408, wallArray[6][2] = 191, wallArray[6][3] = 78;
 	wallArray[7][0] = 829, wallArray[7][1] = 408, wallArray[7][2] = 191, wallArray[7][3] = 78;
+
 	wallArray[8][0] = 0, wallArray[8][1] = 486, wallArray[8][2] = 29, wallArray[8][3] = 258;
-	wallArray[9][0] = 0, wallArray[9][1] = 615, wallArray[9][2] = 29, wallArray[9][3] = 258;
-	wallArray[10][0] = 21, wallArray[10][1] = 615, wallArray[10][2] = 80, wallArray[10][3] = 39;
-	wallArray[11][0] = 923, wallArray[11][1] = 615, wallArray[11][2] = 80, wallArray[11][3] = 39;
+	wallArray[9][0] = windowWidth - 32, wallArray[9][1] = 486, wallArray[9][2] = 29, wallArray[9][3] = 258;
+
+	wallArray[10][0] = 21, wallArray[10][1] = 615, wallArray[10][2] = 75, wallArray[10][3] = 39;
+	wallArray[11][0] = 918, wallArray[11][1] = 615, wallArray[11][2] = 80, wallArray[11][3] = 39;
+
 	wallArray[12][0] = 0, wallArray[12][1] = 743, wallArray[12][2] = windowWidth, wallArray[12][3] = 21;
 
 	// top inner half
+	//medium BOXES
 	wallArray[13][0] = 81, wallArray[13][1] = 51, wallArray[13][2] = 111, wallArray[13][3] = 84;
-	wallArray[14][0] = 252, wallArray[14][1] = 51, wallArray[14][2] = 184, wallArray[14][3] = 84;
-	wallArray[15][0] = 587, wallArray[15][1] = 51, wallArray[15][2] = 184, wallArray[15][3] = 84;
-	wallArray[16][0] = 830, wallArray[16][1] = 51, wallArray[16][2] = 111, wallArray[16][3] = 84;
-
+	wallArray[14][0] = 830, wallArray[14][1] = 51, wallArray[14][2] = 111, wallArray[14][3] = 84;
+	//large box
+	wallArray[15][0] = 252, wallArray[15][1] = 51, wallArray[15][2] = 184, wallArray[15][3] = 84;
+	wallArray[16][0] = 587, wallArray[16][1] = 51, wallArray[16][2] = 184, wallArray[16][3] = 84;
+	//left T boxes
 	wallArray[17][0] = 263, wallArray[17][1] = 190, wallArray[17][2] = 51, wallArray[17][3] = 161;
 	wallArray[18][0] = 303, wallArray[18][1] = 258, wallArray[18][2] = 133, wallArray[18][3] = 30;
-
+	//right T boxes
 	wallArray[19][0] = 709, wallArray[19][1] = 190, wallArray[19][2] = 51, wallArray[19][3] = 161;
 	wallArray[20][0] = 587, wallArray[20][1] = 258, wallArray[20][2] = 133, wallArray[20][3] = 30;
-
+	//Middle T boxes
 	wallArray[21][0] = 374, wallArray[21][1] = 182, wallArray[21][2] = 274, wallArray[21][3] = 39;
 	wallArray[22][0] = 487, wallArray[22][1] = 221, wallArray[22][2] = 49, wallArray[22][3] = 68;
-	
+	//small box
 	wallArray[23][0] = 80, wallArray[23][1] = 188, wallArray[23][2] = 121, wallArray[23][3] = 47;
 	wallArray[24][0] = 820, wallArray[24][1] = 188, wallArray[24][2] = 121, wallArray[24][3] = 47;
 
 	
 	//cage for ghosts
-	wallArray[25][0] = 374, wallArray[25][1] = 326, wallArray[25][2] = 110, wallArray[25][3] = 23;
-	wallArray[26][0] = 547, wallArray[26][1] = 326, wallArray[26][2] = 110, wallArray[26][3] = 23;
+	wallArray[25][0] = 374, wallArray[25][1] = 329, wallArray[25][2] = 110, wallArray[25][3] = 20;
+	wallArray[26][0] = 547, wallArray[26][1] = 329, wallArray[26][2] = 110, wallArray[26][3] = 20;
 
 	wallArray[27][0] = 374, wallArray[27][1] = 334, wallArray[27][2] = 32, wallArray[27][3] = 99;
 	wallArray[28][0] = 618, wallArray[28][1] = 334, wallArray[28][2] = 32, wallArray[28][3] = 99;
@@ -226,6 +241,31 @@ void Pacman::LoadWallCoord()
 	wallArray[29][0] = 385, wallArray[29][1] = 416, wallArray[29][2] = 253, wallArray[29][3] = 24;
 
 	//bottom inner half
+	//small box
+	wallArray[30][0] = 0, wallArray[30][1] = 0, wallArray[30][2] = 0, wallArray[30][3] = 0;
+	//higher middle T box
+	wallArray[31][0] = 375, wallArray[31][1] = 479, wallArray[31][2] = 272, wallArray[31][3] = 33;
+	wallArray[32][0] = 486, wallArray[32][1] = 509, wallArray[32][2] = 49, wallArray[32][3] = 60;
+	//Left + right R boxes
+	wallArray[33][0] = 80, wallArray[33][1] = 533, wallArray[33][2] = 120, wallArray[33][3] = 36;
+	wallArray[34][0] = 820, wallArray[34][1] = 533, wallArray[34][2] = 120, wallArray[34][3] = 36;
+	wallArray[35][0] = 150, wallArray[35][1] = 570, wallArray[35][2] = 51, wallArray[35][3] = 61;
+	wallArray[36][0] = 820, wallArray[36][1] = 570, wallArray[36][2] = 51, wallArray[36][3] = 61;
+	//long boxes
+	wallArray[37][0] = 255, wallArray[37][1] = 561, wallArray[37][2] = 158, wallArray[37][3] = 23;
+	wallArray[38][0] = 609, wallArray[38][1] = 561, wallArray[38][2] = 158, wallArray[38][3] = 23;
+	//upside down T boxes
+	wallArray[39][0] = 253, wallArray[39][1] = 623, wallArray[39][2] = 61, wallArray[39][3] = 65;
+	wallArray[40][0] = 709, wallArray[40][1] = 623, wallArray[40][2] = 61, wallArray[40][3] = 65;
+	wallArray[41][0] = 115, wallArray[41][1] = 688, wallArray[41][2] = 300, wallArray[41][3] = 22;
+	wallArray[42][0] = 608, wallArray[42][1] = 688, wallArray[42][2] = 300, wallArray[42][3] = 22;
+	//middle T boxes
+	wallArray[43][0] = 375, wallArray[43][1] = 624, wallArray[43][2] = 273, wallArray[43][3] = 29;
+	wallArray[44][0] = 487, wallArray[44][1] = 653, wallArray[44][2] = 50, wallArray[44][3] = 53;
+
+	//small box
+	wallArray[45][0] = 251, wallArray[45][1] = 410, wallArray[45][2] = 60, wallArray[45][3] = 76;
+	wallArray[46][0] = 708, wallArray[46][1] = 410, wallArray[46][2] = 60, wallArray[46][3] = 76;
 
 }
 
@@ -257,6 +297,7 @@ void Pacman::Update(int elapsedTime)
 				if (CheckWallCollision(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height))
 					_pacman->moving = false;
 			}
+
 			else if (!CheckWallCollision(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height))
 				_pacman->moving = true;
 
@@ -269,15 +310,15 @@ void Pacman::Update(int elapsedTime)
 					if (CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
 					{
 						_ghosts[i]->moving = false;
-						UpdateGhost(_ghosts[i], elapsedTime);
+						//UpdateGhost(_ghosts[i], elapsedTime);
 					}
-					else
-						UpdateGhost(_ghosts[i], elapsedTime);
+					//else
+						//UpdateGhost(_ghosts[i], elapsedTime);
 				}
 				else if (!CheckWallCollision(_ghosts[i]->position->X, _ghosts[i]->position->Y, _ghosts[i]->sourceRect->Width, _ghosts[i]->sourceRect->Height))
 				{
 					_ghosts[i]->moving = true;
-					UpdateGhost(_ghosts[i], elapsedTime);
+					//UpdateGhost(_ghosts[i], elapsedTime);
 				}
 
 				CheckGhostCollision();
@@ -287,7 +328,8 @@ void Pacman::Update(int elapsedTime)
 			for (int i = 0; i < MUNCHIECOUNT; i++)
 			{
 				if (CollisionCheck(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width,  _pacman->sourceRect->Height,
-					_munchies[i]->position->X, _munchies[i]->position->Y, _munchies[i]->sourceRect->Width, _munchies[i]->sourceRect->Height)) {
+					_munchies[i]->position->X, _munchies[i]->position->Y, _munchies[i]->sourceRect->Width, _munchies[i]->sourceRect->Height)) 
+				{
 
 					_pacman->collision = 'Y';
 					_munchies[i]->position->X = -100;
@@ -303,12 +345,10 @@ void Pacman::Update(int elapsedTime)
 			if (CollisionCheck(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height, 
 				_cherry->position->X, _cherry->position->Y, _cherry->sourceRect->Width, _cherry->sourceRect->Height))
 			{
-				_pacman->collision = 'H';
 				_cherry->position->X = -100;
 				_cherry->position->Y = -100;
+				
 			}
-			else
-				_pacman->collision = 'N';
 
 			UpdateCherry(elapsedTime);
 			CheckViewportCollision();
@@ -324,6 +364,17 @@ void Pacman::CheckStart(Input::KeyboardState* state, Input::Keys startKey)
 	{
 		_menu ->started = true;
 	}
+}
+void Pacman::CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey)
+{
+
+	if (state->IsKeyDown(Input::Keys::P) && !_menu->pKeyDown)
+	{
+		_menu->pKeyDown = true;
+		_menu->paused = !_menu->paused;
+	}
+	if (state->IsKeyUp(Input::Keys::P))
+		_menu->pKeyDown = false;
 }
 
 void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseState*mouseState)
@@ -368,8 +419,6 @@ void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseStat
 		_pacman->direction = 1;
 	}
 	
-	//if (_pacman->previousDirection != _pacman->direction)
-		//_pacman->moving = true;
 
 	if (_pacman->moving == true || _pacman->previousDirection != _pacman->direction)
 		//_pacman->moving = true;
@@ -399,17 +448,6 @@ void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseStat
 	
 }
 
-void Pacman::CheckPaused(Input::KeyboardState*state , Input::Keys pauseKey)
-{
-
-	if (state->IsKeyDown(Input::Keys::P) && !_menu->pKeyDown)
-	{
-		_menu->pKeyDown = true;
-		_menu->paused = !_menu->paused;
-	}
-	if (state->IsKeyDown(Input::Keys::P))
-		_menu->pKeyDown = false;
-}
 
 void Pacman::UpdatePacman(int elapsedTime)
 {
@@ -541,7 +579,9 @@ bool Pacman::CollisionCheck(int x1, int y1, int width1, int height1, int x2, int
 	{
 		return false;
 	}
+
 	return true;
+
 
 }
 void Pacman::CheckGhostCollision()
@@ -611,6 +651,8 @@ void Pacman::Draw(int elapsedTime)
 		cout << "Mouse X: " << p.x << " Mouse Y : " << p.y - 31;
 	}
 	stream << " Mouse X: " << p.x << " Mouse Y : " << p.y-31;
+
+
 	SpriteBatch::BeginDraw(); // Starts Drawing
 
 	if (!_pacman->dead)

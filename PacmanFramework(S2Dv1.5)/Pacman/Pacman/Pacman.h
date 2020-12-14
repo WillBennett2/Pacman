@@ -13,7 +13,7 @@
 
 #define MUNCHIECOUNT 50
 #define GHOSTCOUNT 4
-#define WALLCOUNT 45
+#define WALLCOUNT 47
 
 // Reduces the amount of typing by including all classes in S2D namespace
 using namespace S2D;
@@ -111,7 +111,7 @@ private:
 
 	Walls* _walls;
 	WallCoord* _wallCoord[WALLCOUNT];
-	int wallArray[45][4];
+	int wallArray[WALLCOUNT][4];
 
 	//cosntant variable data for game
 	const float _cPacmanSpeed;
