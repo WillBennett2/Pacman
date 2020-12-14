@@ -3,8 +3,20 @@ using namespace std;
 #include <iostream>
 #include <sstream>
 
+//constructor
 Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_cPacmanFrameTime(150), _cMunchieFrameTime(500),_cCherryFrameTime(500)
 {
+	//CHARACTERS
+	//Initialise member variables
+	_pacman = new Player();
+	_pacman->dead = false;
+	_pacman->moving = true;
+	_pacman->previousDirection = -1;
+
+	_cherry = new Enemy();
+	_cherry->frame = 0;
+	_cherry->currentFrameTime = 0;
+
 	//local variable
 	for (int i = 0; i <MUNCHIECOUNT; i++)
 	{
@@ -22,46 +34,46 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 		_ghosts[i]->moving = true;
 		_ghosts[i]->speed = 0.2f;
 	}
-	
-	//Initialise member variables
-	_pacman = new Player();
-	_pacman->dead = false;
-	_pacman->moving = true;
-	_pacman->previousDirection = -1;
 
-	_cherry = new Enemy();
+	//ADDITIONAL
 
+	//menu
 	_menu = new Menu();
-
-	_walls = new Walls();
-	for (int i = 0; i <WALLCOUNT; i++)
-	{
-		_wallCoord[i] = new WallCoord();
-	}
-	
-	_cherry->frame = 0;
-	_cherry->currentFrameTime = 0;
-
 	_menu ->paused = false;
 	_menu-> pKeyDown = false;
 	_menu->started = false;
 	_menu->randomised = false;
 
+	//sounds
+	_munch = new SoundEffect();
+
+	//walls
+
+	for (int i = 0; i < WALLCOUNT; i++)
+	{
+		_walls[i] = new Walls();
+		//_wallCoord[i] = new WallCoord();
+	}
 	//Initialise important Game aspects
+	Audio::Initialise();
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
 	Input::Initialise();
 
 	// Start the Game Loop - This calls Update and Draw in game loop
 	Graphics::StartGameLoop();
+
+
 }
 
 Pacman::~Pacman() //clearing memory when the program ends
 {
-	delete _pacman->texture;
-	delete _pacman->sourceRect;
-	delete _pacman->position;
-	delete _pacman;
-	
+	//cherries
+	delete _cherry->texture;
+	delete _cherry->invertedTexture;
+	delete _cherry->sourceRect;
+	delete _cherry;
+
+	//ghosts
 	delete _ghosts[0]->texture;
 	for (int nCount = 0; nCount < GHOSTCOUNT; nCount++)
 	{
@@ -71,6 +83,7 @@ Pacman::~Pacman() //clearing memory when the program ends
 	}
 	delete[] _ghosts;
 
+	//munchies
 	delete _munchies[0]->texture;
 	for (int nCount = 0; nCount < MUNCHIECOUNT; nCount++)
 	{
@@ -80,22 +93,26 @@ Pacman::~Pacman() //clearing memory when the program ends
 	}
 	delete[] _munchies;
 
-	delete _cherry->texture;
-	delete _cherry->invertedTexture;
-	delete _cherry->sourceRect;
-	delete _cherry;
-
+	//menu
 	delete _menu;
 
-	delete _walls->texture;
+	//pacman
+	delete _pacman->texture;
+	delete _pacman->sourceRect;
+	delete _pacman->position;
+	delete _pacman;
+
+	//sound 
+	delete _munch;
+
+	//walls
+	delete _walls[0]->texture;
+	delete _walls[0]->rectangle;
 	for (int nCount = 0; nCount < WALLCOUNT; nCount++)
 	{
-		delete _wallCoord[nCount];
-
+		delete _walls[nCount];
 	}
-	delete[] _wallCoord;
-
-	delete _walls;
+	delete[] _walls;
 }
 
 void Pacman::LoadContent()
@@ -162,18 +179,18 @@ void Pacman::LoadContent()
 	_stringPosition = new Vector2(11.0f, 25.0f);
 
 	// Set walls image 
-	_walls->texture = new Texture2D();
-	_walls->texture->Load("Textures/Map.png", true);
-	_walls->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
+	_walls[0]->texture = new Texture2D();
+	_walls[0]->texture->Load("Textures/Map.png", true);
+	_walls[0]->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
 
-	// Set wall positions
+	// Giving the walls their positions
 	LoadWallCoord();
 	for (int i = 0; i < WALLCOUNT; i++)
 	{
-		_wallCoord[i]->X = wallArray[i][0];
-		_wallCoord[i]->Y = wallArray[i][1];
-		_wallCoord[i]->width = wallArray[i][2];
-		_wallCoord[i]->height = wallArray[i][3];
+		_walls[i]->X = wallArray[i][0];
+		_walls[i]->Y = wallArray[i][1];
+		_walls[i]->width = wallArray[i][2];
+		_walls[i]->height = wallArray[i][3];
 	}
 
 
@@ -623,10 +640,10 @@ bool Pacman::CheckWallCollision(int x1, int y1, int width1, int height1)
 
 	for (int i = 0; i < WALLCOUNT; i++)
 	{
-		top2 = _wallCoord[i]->Y;
-		bottom2 = _wallCoord[i]->Y + _wallCoord[i]->height;
-		left2 = _wallCoord[i]->X;
-		right2 = _wallCoord[i]->X + _wallCoord[i]->width;
+		top2 = _walls[i]->Y;
+		bottom2 = _walls[i]->Y + _walls[i]->height;
+		left2 = _walls[i]->X;
+		right2 = _walls[i]->X + _walls[i]->width;
 
 		if ((bottom1 > top2) && (top1 < bottom2) && (right1 > left2) && (left1 < right2))
 		{
@@ -699,7 +716,7 @@ void Pacman::Draw(int elapsedTime)
 
 	if (_menu->started) 
 	{
-		SpriteBatch::Draw(_walls->texture, _walls->rectangle, nullptr);
+		SpriteBatch::Draw(_walls[0]->texture, _walls[0]->rectangle, nullptr);
 	}
 	
 	

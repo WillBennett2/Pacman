@@ -82,6 +82,7 @@ struct Menu
 	bool randomised;
 };
 
+
 struct WallCoord
 {
 	int X;
@@ -94,6 +95,11 @@ struct Walls
 {
 	Texture2D* texture;
 	Rect* rectangle;
+
+	int X;
+	int Y;
+	int width;
+	int height;
 };
 // Declares the Pacman class which inherits from the Game class.
 // This allows us to overload the Game class methods to help us
@@ -109,8 +115,11 @@ private:
 
 	Menu* _menu;
 
-	Walls* _walls;
-	WallCoord* _wallCoord[WALLCOUNT];
+	//sound realted pointers
+	SoundEffect* _munch;
+
+	Walls* _walls[WALLCOUNT];
+	//WallCoord* _wallCoord[WALLCOUNT];
 	int wallArray[WALLCOUNT][4];
 
 	//cosntant variable data for game
