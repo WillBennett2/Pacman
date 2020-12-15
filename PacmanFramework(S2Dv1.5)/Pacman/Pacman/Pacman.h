@@ -10,8 +10,9 @@
 
 // Just need to include main header file
 #include "S2D/S2D.h"
+#include <iostream>
 
-#define MUNCHIECOUNT 50
+#define MUNCHIECOUNT 150
 #define GHOSTCOUNT 4
 #define WALLCOUNT 47
 
@@ -21,6 +22,9 @@ using namespace S2D;
 // Structure Definition
 struct Player
 {
+	// Data to enhance game
+	int lives;
+	int score;
 	// Data to represent Pacman
 	Vector2* position;
 	Rect* sourceRect;
@@ -76,21 +80,13 @@ struct Menu
 	Vector2* stringPosition;
 	bool paused;
 	bool pKeyDown;
+	bool m1Down;
 
 	bool started;
 
 	bool randomised;
 };
 
-
-struct WallCoord
-{
-	int X;
-	int Y;
-	int width;
-	int height;
-
-};
 struct Walls
 {
 	Texture2D* texture;
@@ -109,8 +105,11 @@ class Pacman : public Game
 {
 private:
 	Player* _pacman;
+
 	MovingEnemy* _ghosts[GHOSTCOUNT];
 	Enemy* _munchies[MUNCHIECOUNT];
+	int munchieArray[MUNCHIECOUNT][2];
+
 	Enemy* _cherry;
 
 	Menu* _menu;
@@ -119,7 +118,6 @@ private:
 	SoundEffect* _munch;
 
 	Walls* _walls[WALLCOUNT];
-	//WallCoord* _wallCoord[WALLCOUNT];
 	int wallArray[WALLCOUNT][4];
 
 	//cosntant variable data for game
@@ -135,6 +133,9 @@ private:
 	//Position for String
 	Vector2* _stringPosition;
 
+	int i, j;
+	int mCount;
+
 	//input method
 	void Input(int elapsedTime, Input::KeyboardState* state,Input::MouseState* mouseState);
 
@@ -147,6 +148,7 @@ private:
 	bool CheckWallCollision(int x1, int y1, int width1, int height1);
 
 	void LoadWallCoord();
+	void LoadMunchieCoord();
 	//Update methods
 	void UpdatePacman(int elapsedTime);
 	void UpdateGhost(MovingEnemy*, int elapsedTime);

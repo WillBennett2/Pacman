@@ -1,6 +1,5 @@
 #include "Pacman.h"
 using namespace std;
-#include <iostream>
 #include <sstream>
 
 //constructor
@@ -12,6 +11,7 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	_pacman->dead = false;
 	_pacman->moving = true;
 	_pacman->previousDirection = -1;
+	_pacman->score = 0;
 
 	_cherry = new Enemy();
 	_cherry->frame = 0;
@@ -35,12 +35,15 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 		_ghosts[i]->speed = 0.2f;
 	}
 
-	//ADDITIONAL
+	// ADDITIONAL
+	i = j = 0;
+	mCount = 0;
 
 	//menu
 	_menu = new Menu();
 	_menu ->paused = false;
 	_menu-> pKeyDown = false;
+	_menu->m1Down = false;
 	_menu->started = false;
 	_menu->randomised = false;
 
@@ -48,14 +51,15 @@ Pacman::Pacman(int argc, char* argv[]) : Game(argc, argv), _cPacmanSpeed(0.1f),_
 	_munch = new SoundEffect();
 
 	//walls
-
 	for (int i = 0; i < WALLCOUNT; i++)
-	{
 		_walls[i] = new Walls();
-		//_wallCoord[i] = new WallCoord();
-	}
+
 	//Initialise important Game aspects
 	Audio::Initialise();
+	if (!_munch->IsLoaded())
+	{
+		cout << "_munch member sound effect has not loaded" << endl;
+	}
 	Graphics::Initialise(argc, argv, this, 1024, 768, false, 25, 25, "Pacman", 60);
 	Input::Initialise();
 
@@ -117,14 +121,20 @@ Pacman::~Pacman() //clearing memory when the program ends
 
 void Pacman::LoadContent()
 {
-	// Load Pacman
-	_pacman->texture = new Texture2D();
-	_pacman->texture->Load("Textures/Pacman.png", false);
-	_pacman->position = new Vector2(517.0f, 443.0f);
-	_pacman->sourceRect = new Rect(0.0f, 0.5f, 33, 32);
+	// Set string position
+	_stringPosition = new Vector2(41.0f, 15.0f);
+
+	//load Cherry
+	_cherry->texture = new Texture2D();
+	_cherry->texture->Load("Textures/Cherry.png", true);
+	_cherry->invertedTexture = new Texture2D();
+	_cherry->invertedTexture->Load("Textures/CherryInverted.png", true);
+
+	_cherry->position = new Vector2(500.0f, 450.0f);
+	_cherry->sourceRect = new Rect(_cherry->position->X, _cherry->position->Y, 28, 28);
 
 	// Load ghost
-	for (int i = 0; i< GHOSTCOUNT; i++)
+	for (int i = 0; i < GHOSTCOUNT; i++)
 	{
 		Texture2D* GhostTex = new Texture2D();
 		switch (i)
@@ -150,40 +160,44 @@ void Pacman::LoadContent()
 		//_ghosts[i]->position = new Vector2((300), (rand() % Graphics::GetViewportHeight()));//rand() % Graphics::GetViewportWidth()
 		_ghosts[i]->sourceRect = new Rect(0.0f, 0.7f, 20, 20);
 
-
 	}
+
+	// Set Menu Paramters
+	_menu->background = new Texture2D();
+	_menu->background->Load("Textures/Transparency.png", false);
+	_menu->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
+	_menu->stringPosition = new Vector2(Graphics::GetViewportWidth() / 2.0f, Graphics::GetViewportHeight() / 2.0f);
 
 	// Load Munchie
 	Texture2D* munchieTex = new Texture2D();
 	munchieTex->Load("Textures/Munchie.tga", false);
 	Texture2D* invertedMunchieTex = new Texture2D();
 	invertedMunchieTex->Load("Textures/MunchieInverted.tga", true);
+	LoadMunchieCoord();
 	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
-		_munchies[i]->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
+		_munchies[i]->position = new Vector2(munchieArray[i][0],munchieArray[i][1]);
 		_munchies[i]->texture = munchieTex;
 		_munchies[i]->invertedTexture = invertedMunchieTex;
 		_munchies[i]->sourceRect = new Rect(_munchies[i]->position->X, _munchies[i]->position->Y, 12, 12);
 	}
 
-	//load Cherry
-	_cherry->texture = new Texture2D();
-	_cherry->texture->Load("Textures/Cherry.png", true);
-	_cherry->invertedTexture = new Texture2D();
-	_cherry->invertedTexture->Load("Textures/CherryInverted.png", true);
+	// Load Pacman
+	_pacman->texture = new Texture2D();
+	_pacman->texture->Load("Textures/Pacman.png", false);
+	_pacman->position = new Vector2(500.0f, 580.0f);
+	_pacman->sourceRect = new Rect(0.0f, 0.5f, 33, 32);
 
-	_cherry->position = new Vector2((rand() % Graphics::GetViewportWidth()), (rand() % Graphics::GetViewportHeight()));
-	_cherry->sourceRect = new Rect(_cherry->position->X, _cherry->position->Y, 28, 28);
+	// Load Sounds
+	_munch->Load("Sounds/munch.wav");
 
-	// Set string position
-	_stringPosition = new Vector2(11.0f, 25.0f);
-
-	// Set walls image 
+	// Load Walls
+	//Set walls image 
 	_walls[0]->texture = new Texture2D();
 	_walls[0]->texture->Load("Textures/Map.png", true);
 	_walls[0]->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
 
-	// Giving the walls their positions
+	//Giving the walls their positions
 	LoadWallCoord();
 	for (int i = 0; i < WALLCOUNT; i++)
 	{
@@ -194,13 +208,9 @@ void Pacman::LoadContent()
 	}
 
 
-	// Set Menu Paramters
-	_menu->background = new Texture2D();
-	_menu->background->Load("Textures/Transparency.png", false);
-	_menu->rectangle = new Rect(0.0f, 0.0f, Graphics::GetViewportWidth(), Graphics::GetViewportHeight());
-	_menu->stringPosition = new Vector2(Graphics::GetViewportWidth() / 2.0f, Graphics::GetViewportHeight() / 2.0f);
 
 }
+
 void Pacman::LoadWallCoord()
 {
 	//defining wall coords, widths, and heights of all the wall to create a box collider
@@ -229,11 +239,11 @@ void Pacman::LoadWallCoord()
 
 	// top inner half
 	//medium BOXES
-	wallArray[13][0] = 81, wallArray[13][1] = 51, wallArray[13][2] = 111, wallArray[13][3] = 84;
-	wallArray[14][0] = 830, wallArray[14][1] = 51, wallArray[14][2] = 111, wallArray[14][3] = 84;
+	wallArray[13][0] = 81, wallArray[13][1] = 56, wallArray[13][2] = 111, wallArray[13][3] = 81;
+	wallArray[14][0] = 830, wallArray[14][1] = 56, wallArray[14][2] = 111, wallArray[14][3] = 81;
 	//large box
-	wallArray[15][0] = 252, wallArray[15][1] = 51, wallArray[15][2] = 184, wallArray[15][3] = 84;
-	wallArray[16][0] = 587, wallArray[16][1] = 51, wallArray[16][2] = 184, wallArray[16][3] = 84;
+	wallArray[15][0] = 252, wallArray[15][1] = 56, wallArray[15][2] = 184, wallArray[15][3] = 81;
+	wallArray[16][0] = 587, wallArray[16][1] = 56, wallArray[16][2] = 184, wallArray[16][3] = 81;
 	//left T boxes
 	wallArray[17][0] = 263, wallArray[17][1] = 190, wallArray[17][2] = 51, wallArray[17][3] = 161;
 	wallArray[18][0] = 303, wallArray[18][1] = 258, wallArray[18][2] = 133, wallArray[18][3] = 30;
@@ -284,6 +294,159 @@ void Pacman::LoadWallCoord()
 	wallArray[45][0] = 251, wallArray[45][1] = 410, wallArray[45][2] = 60, wallArray[45][3] = 76;
 	wallArray[46][0] = 708, wallArray[46][1] = 410, wallArray[46][2] = 60, wallArray[46][3] = 76;
 
+}
+void Pacman::LoadMunchieCoord()
+{
+	munchieArray[0][0] = 458, munchieArray[0][1] = 132;
+	munchieArray[1][0] = 461, munchieArray[1][1] = 100;
+	munchieArray[2][0] = 464, munchieArray[2][1] = 65;
+	munchieArray[3][0] = 464, munchieArray[3][1] = 33;
+	munchieArray[4][0] = 430, munchieArray[4][1] = 33;
+	munchieArray[5][0] = 400, munchieArray[5][1] = 33;
+	munchieArray[6][0] = 358, munchieArray[6][1] = 33;
+	munchieArray[7][0] = 303, munchieArray[7][1] = 34;
+	munchieArray[8][0] = 254, munchieArray[8][1] = 36;
+	munchieArray[9][0] = 214, munchieArray[9][1] = 31;
+	munchieArray[10][0] = 170, munchieArray[10][1] = 32;
+	munchieArray[11][0] = 126, munchieArray[11][1] = 32;
+	munchieArray[12][0] = 72, munchieArray[12][1] = 32;
+	munchieArray[13][0] = 55, munchieArray[13][1] = 65;
+	munchieArray[14][0] = 52, munchieArray[14][1] = 103;
+	munchieArray[15][0] = 54, munchieArray[15][1] = 138;
+	munchieArray[16][0] = 52, munchieArray[16][1] = 178;
+	munchieArray[17][0] = 113, munchieArray[17][1] = 159;
+	munchieArray[18][0] = 177, munchieArray[18][1] = 159;
+	munchieArray[19][0] = 222, munchieArray[19][1] = 131;
+	munchieArray[20][0] = 223, munchieArray[20][1] = 92;
+	munchieArray[21][0] = 57, munchieArray[21][1] = 242;
+	munchieArray[22][0] = 104, munchieArray[22][1] = 247;
+	munchieArray[23][0] = 180, munchieArray[23][1] = 248;
+	munchieArray[24][0] = 288, munchieArray[24][1] = 160;
+	munchieArray[25][0] = 331, munchieArray[25][1] = 159;
+	munchieArray[26][0] = 402, munchieArray[26][1] = 160;
+	munchieArray[27][0] = 346, munchieArray[27][1] = 201;
+	munchieArray[28][0] = 344, munchieArray[28][1] = 238;
+	munchieArray[29][0] = 400, munchieArray[29][1] = 238;
+	munchieArray[30][0] = 461, munchieArray[30][1] = 239;
+	munchieArray[31][0] = 461, munchieArray[31][1] = 275;
+	munchieArray[32][0] = 226, munchieArray[32][1] = 285;
+	munchieArray[33][0] = 224, munchieArray[33][1] = 326;
+	munchieArray[34][0] = 226, munchieArray[34][1] = 375;
+	munchieArray[35][0] = 286, munchieArray[35][1] = 377;
+	munchieArray[36][0] = 166, munchieArray[36][1] = 376;
+	munchieArray[37][0] = 114, munchieArray[37][1] = 374;
+	munchieArray[38][0] = 61, munchieArray[38][1] = 374;
+	munchieArray[39][0] = 14, munchieArray[39][1] = 373;
+	munchieArray[40][0] = 217, munchieArray[40][1] = 410;
+	munchieArray[41][0] = 216, munchieArray[41][1] = 456;
+	munchieArray[42][0] = 213, munchieArray[42][1] = 504;
+	munchieArray[43][0] = 164, munchieArray[43][1] = 505;
+	munchieArray[44][0] = 103, munchieArray[44][1] = 503;
+	munchieArray[45][0] = 61, munchieArray[45][1] = 505;
+	munchieArray[46][0] = 55, munchieArray[46][1] = 543;
+	munchieArray[47][0] = 58, munchieArray[47][1] = 588;
+	munchieArray[48][0] = 123, munchieArray[48][1] = 590;
+	munchieArray[49][0] = 121, munchieArray[49][1] = 639;
+	munchieArray[50][0] = 93, munchieArray[50][1] = 671;
+	munchieArray[51][0] = 54, munchieArray[51][1] = 675;
+	munchieArray[52][0] = 228, munchieArray[52][1] = 657;
+	munchieArray[53][0] = 226, munchieArray[53][1] = 608;
+	munchieArray[54][0] = 228, munchieArray[54][1] = 562;
+	munchieArray[55][0] = 67, munchieArray[55][1] = 720;
+	munchieArray[56][0] = 128, munchieArray[56][1] = 721;
+	munchieArray[57][0] = 198, munchieArray[57][1] = 722;
+	munchieArray[58][0] = 259, munchieArray[58][1] = 723;
+	munchieArray[59][0] = 327, munchieArray[59][1] = 723;
+	munchieArray[60][0] = 383, munchieArray[60][1] = 722;
+	munchieArray[61][0] = 449, munchieArray[61][1] = 724;
+	munchieArray[62][0] = 448, munchieArray[62][1] = 670;
+	munchieArray[63][0] = 394, munchieArray[63][1] = 667;
+	munchieArray[64][0] = 340, munchieArray[64][1] = 666;
+	munchieArray[65][0] = 338, munchieArray[65][1] = 604;
+	munchieArray[66][0] = 406, munchieArray[66][1] = 606;
+	munchieArray[67][0] = 453, munchieArray[67][1] = 605;
+	munchieArray[68][0] = 511, munchieArray[68][1] = 602;
+	munchieArray[69][0] = 452, munchieArray[69][1] = 571;
+	munchieArray[70][0] = 451, munchieArray[70][1] = 533;
+	munchieArray[71][0] = 380, munchieArray[71][1] = 533;
+	munchieArray[72][0] = 332, munchieArray[72][1] = 536;
+	munchieArray[73][0] = 337, munchieArray[73][1] = 490;
+	munchieArray[74][0] = 507, munchieArray[74][1] = 725;
+	munchieArray[75][0] = 577, munchieArray[75][1] = 725;
+	munchieArray[76][0] = 572, munchieArray[76][1] = 664;
+	munchieArray[77][0] = 633, munchieArray[77][1] = 668;
+	munchieArray[78][0] = 684, munchieArray[78][1] = 669;
+	munchieArray[79][0] = 684, munchieArray[79][1] = 631;
+	munchieArray[80][0] = 681, munchieArray[80][1] = 594;
+	munchieArray[81][0] = 620, munchieArray[81][1] = 600;
+	munchieArray[82][0] = 567, munchieArray[82][1] = 599;
+	munchieArray[83][0] = 567, munchieArray[83][1] = 568;
+	munchieArray[84][0] = 567, munchieArray[84][1] = 532;
+	munchieArray[85][0] = 624, munchieArray[85][1] = 536;
+	munchieArray[86][0] = 717, munchieArray[86][1] = 533;
+	munchieArray[87][0] = 768, munchieArray[87][1] = 534;
+	munchieArray[88][0] = 680, munchieArray[88][1] = 498;
+	munchieArray[89][0] = 628, munchieArray[89][1] = 726;
+	munchieArray[90][0] = 668, munchieArray[90][1] = 726;
+	munchieArray[91][0] = 713, munchieArray[91][1] = 725;
+	munchieArray[92][0] = 756, munchieArray[92][1] = 727;
+	munchieArray[93][0] = 800, munchieArray[93][1] = 727;
+	munchieArray[94][0] = 843, munchieArray[94][1] = 728;
+	munchieArray[95][0] = 893, munchieArray[95][1] = 730;
+	munchieArray[96][0] = 957, munchieArray[96][1] = 730;
+	munchieArray[97][0] = 960, munchieArray[97][1] = 698;
+	munchieArray[98][0] = 960, munchieArray[98][1] = 665;
+	munchieArray[99][0] = 916, munchieArray[99][1] = 664;
+	munchieArray[100][0] = 857, munchieArray[100][1] = 664;
+	munchieArray[101][0] = 798, munchieArray[101][1] = 661;
+	munchieArray[102][0] = 797, munchieArray[102][1] = 624;
+	munchieArray[103][0] = 901, munchieArray[103][1] = 633;
+	munchieArray[104][0] = 900, munchieArray[104][1] = 593;
+	munchieArray[105][0] = 958, munchieArray[105][1] = 594;
+	munchieArray[106][0] = 960, munchieArray[106][1] = 544;
+	munchieArray[107][0] = 958, munchieArray[107][1] = 498;
+	munchieArray[108][0] = 909, munchieArray[108][1] = 498;
+	munchieArray[109][0] = 848, munchieArray[109][1] = 496;
+	munchieArray[110][0] = 793, munchieArray[110][1] = 496;
+	munchieArray[111][0] = 795, munchieArray[111][1] = 448;
+	munchieArray[112][0] = 795, munchieArray[112][1] = 387;
+	munchieArray[113][0] = 748, munchieArray[113][1] = 383;
+	munchieArray[114][0] = 857, munchieArray[114][1] = 383;
+	munchieArray[115][0] = 904, munchieArray[115][1] = 383;
+	munchieArray[116][0] = 950, munchieArray[116][1] = 384;
+	munchieArray[117][0] = 1010, munchieArray[117][1] = 385;
+	munchieArray[118][0] = 790, munchieArray[118][1] = 329;
+	munchieArray[119][0] = 794, munchieArray[119][1] = 277;
+	munchieArray[120][0] = 794, munchieArray[120][1] = 234;
+	munchieArray[121][0] = 842, munchieArray[121][1] = 251;
+	munchieArray[122][0] = 902, munchieArray[122][1] = 251;
+	munchieArray[123][0] = 960, munchieArray[123][1] = 252;
+	munchieArray[124][0] = 966, munchieArray[124][1] = 209;
+	munchieArray[125][0] = 963, munchieArray[125][1] = 155;
+	munchieArray[126][0] = 916, munchieArray[126][1] = 158;
+	munchieArray[127][0] = 877, munchieArray[127][1] = 158;
+	munchieArray[128][0] = 843, munchieArray[128][1] = 158;
+	munchieArray[129][0] = 801, munchieArray[129][1] = 160;
+	munchieArray[130][0] = 801, munchieArray[130][1] = 110;
+	munchieArray[131][0] = 799, munchieArray[131][1] = 70;
+	munchieArray[132][0] = 803, munchieArray[132][1] = 34;
+	munchieArray[133][0] = 850, munchieArray[133][1] = 34;
+	munchieArray[134][0] = 900, munchieArray[134][1] = 34;
+	munchieArray[135][0] = 967, munchieArray[135][1] = 35;
+	munchieArray[136][0] = 735, munchieArray[136][1] = 34;
+	munchieArray[137][0] = 688, munchieArray[137][1] = 32;
+	munchieArray[138][0] = 654, munchieArray[138][1] = 33;
+	munchieArray[139][0] = 574, munchieArray[139][1] = 33;
+	munchieArray[140][0] = 566, munchieArray[140][1] = 67;
+	munchieArray[141][0] = 564, munchieArray[141][1] = 154;
+	munchieArray[142][0] = 620, munchieArray[142][1] = 158;
+	munchieArray[143][0] = 670, munchieArray[143][1] = 156;
+	munchieArray[144][0] = 735, munchieArray[144][1] = 157;
+	munchieArray[145][0] = 683, munchieArray[145][1] = 199;
+	munchieArray[146][0] = 682, munchieArray[146][1] = 232;
+	munchieArray[147][0] = 623, munchieArray[147][1] = 239;
+	munchieArray[148][0] = 562, munchieArray[148][1] = 233;
+	munchieArray[149][0] = 556, munchieArray[149][1] = 271;
 }
 
 void Pacman::Update(int elapsedTime)
@@ -347,8 +510,9 @@ void Pacman::Update(int elapsedTime)
 				if (CollisionCheck(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width,  _pacman->sourceRect->Height,
 					_munchies[i]->position->X, _munchies[i]->position->Y, _munchies[i]->sourceRect->Width, _munchies[i]->sourceRect->Height)) 
 				{
-
-					_pacman->collision = 'Y';
+					Audio::Play(_munch);
+					_pacman->score+=10;
+					//_pacman->collision = 'Y';
 					_munchies[i]->position->X = -100;
 					_munchies[i]->position->Y = -100;
 				}
@@ -362,6 +526,7 @@ void Pacman::Update(int elapsedTime)
 			if (CollisionCheck(_pacman->position->X, _pacman->position->Y, _pacman->sourceRect->Width, _pacman->sourceRect->Height, 
 				_cherry->position->X, _cherry->position->Y, _cherry->sourceRect->Width, _cherry->sourceRect->Height))
 			{
+				_pacman->score += 300;
 				_cherry->position->X = -100;
 				_cherry->position->Y = -100;
 				
@@ -396,6 +561,13 @@ void Pacman::CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey)
 
 void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseState*mouseState)
 {
+	//if (state->IsKeyDown(Input::Keys::R) && !_menu->randomised)
+//{
+//	_cherry->position->X = rand() % Graphics::GetViewportWidth();
+//	_cherry->position->Y = rand() % Graphics::GetViewportHeight();
+//	_menu->randomised = true;
+//}
+	
 	float pacmanSpeed = _cPacmanSpeed * elapsedTime* _pacman->speedMulitplier;
 	if (state->IsKeyDown(Input::Keys::LEFTSHIFT))
 		pacmanSpeed = 2.0f; //apply multiplier
@@ -403,42 +575,21 @@ void Pacman::Input(int elapsedTime, Input::KeyboardState*state, Input::MouseStat
 	else
 		pacmanSpeed = 1.0f; //reset multiplier
 
-	if (state->IsKeyDown(Input::Keys::R) && !_menu->randomised)
-	{
-		_cherry->position->X = rand() % Graphics::GetViewportWidth();
-		_cherry->position->Y = rand() % Graphics::GetViewportHeight();
-		_menu->randomised = true;
-	}
 
-	/*if (mouseState->LeftButton == Input::ButtonState::PRESSED) 
-	{
-		_cherry->position->X = mouseState->X;
-		_cherry->position->Y = mouseState->Y;
-	}*/
+	if (state->IsKeyDown(Input::Keys::D) || state->IsKeyDown(Input::Keys::RIGHT))// Checks if D/right key is pressed
+		_pacman->direction = 4;  //variable used for switch statements to keep pacman once a direction has been picked
 
-	if (state->IsKeyDown(Input::Keys::D) || state->IsKeyDown(Input::Keys::RIGHT))
-	{ // Checks if D/right key is pressed
-				//_pacmanPosition->X += _cPacmanSpeed * elapsedTime; //Moves Pacman across X axis
-		_pacman->direction = 4;//variable used for switch statements to keep pacman once a direction has been picked
-	}
-
-	else if (state->IsKeyDown(Input::Keys::A) || state->IsKeyDown(Input::Keys::LEFT)) {// Checks if A/left key is pressed
-		//_pacmanPosition->X -= _cPacmanSpeed * elapsedTime;
+	else if (state->IsKeyDown(Input::Keys::A) || state->IsKeyDown(Input::Keys::LEFT))// Checks if A/left key is pressed
 		_pacman->direction = 2;
-	}
-	else if (state->IsKeyDown(Input::Keys::W) || state->IsKeyDown(Input::Keys::UP)) {//checks if W/up key is pressed
-		//_pacmanPosition->Y -= _cPacmanSpeed * elapsedTime;
-		_pacman->direction = 3;
-	}
 
-	else if (state->IsKeyDown(Input::Keys::S) || state->IsKeyDown(Input::Keys::DOWN)) { //checks if S/down key is pressed
-		//_pacmanPosition->Y += _cPacmanSpeed * elapsedTime;
+	else if (state->IsKeyDown(Input::Keys::W) || state->IsKeyDown(Input::Keys::UP))//checks if W/up key is pressed
+		_pacman->direction = 3;
+
+	else if (state->IsKeyDown(Input::Keys::S) || state->IsKeyDown(Input::Keys::DOWN)) //checks if S/down key is pressed
 		_pacman->direction = 1;
-	}
 	
 
 	if (_pacman->moving == true || _pacman->previousDirection != _pacman->direction)
-		//_pacman->moving = true;
 		switch (_pacman->direction)
 		{
 		case 4:
@@ -658,17 +809,11 @@ void Pacman::Draw(int elapsedTime)
 {
 	// Allows us to easily create a string
 	std::stringstream stream;
-	stream << "Pacman X: " << _pacman->position->X << " Y: " << _pacman->position->Y << " collision: "<< _pacman->collision;
-	POINT p;
-	GetCursorPos(&p);
-	Input::MouseState* mouseState = Input::Mouse::GetState();
-	if (mouseState->LeftButton == Input::ButtonState::PRESSED)
-	{
-		system("cls");
-		cout << "Mouse X: " << p.x << " Mouse Y : " << p.y - 31;
-	}
-	stream << " Mouse X: " << p.x << " Mouse Y : " << p.y-31;
+	
+	//TESTING 
+	//stream << "Pacman X: " << _pacman->position->X << " Y: " << _pacman->position->Y << " collision: "<< _pacman->collision;
 
+	//stream << " Mouse X: " << curser.x << " Mouse Y : " << curser.y-31;
 
 	SpriteBatch::BeginDraw(); // Starts Drawing
 
@@ -679,6 +824,33 @@ void Pacman::Draw(int elapsedTime)
 	{
 		SpriteBatch::Draw(_ghosts[i]->texture, _ghosts[i]->position, _ghosts[i]->sourceRect);
 	}
+	POINT curser;
+	GetCursorPos(&curser);
+	Input::MouseState* mouseState = Input::Mouse::GetState();
+	Input::KeyboardState* keyboardState = Input::Keyboard::GetState();
+
+	if ((mouseState->LeftButton == Input::ButtonState::PRESSED) && !_menu->m1Down)
+	{
+		_menu->m1Down = true;
+		//system("cls");
+		//cout << "Mouse X: " << curser.x << " Mouse Y : " << curser.y - 31;
+		if (j == 2)
+		{
+			i++;
+			j = 0;
+		}
+		cout << "munchieArray[" << i << "]" << "[" << j << "]" << "=" << curser.x;
+		j++;
+		cout << ", munchieArray[" << i << "]" << "[" << j << "]" << "=" << curser.y-31<<";" << endl;
+		j++;
+		mCount++;
+	}
+	if (mouseState->LeftButton == Input::ButtonState::RELEASED)
+		_menu->m1Down = false;
+
+	if (keyboardState->IsKeyDown(Input::Keys::T))
+		cout << "Total count = " << mCount << endl;
+
 
 	for (int i = 0; i < MUNCHIECOUNT; i++)
 	{
@@ -721,7 +893,9 @@ void Pacman::Draw(int elapsedTime)
 	
 	
 	// Draws String
-	SpriteBatch::DrawString(stream.str().c_str(), _stringPosition, Color::Green);
+
+	stream << "SCORE: " << _pacman->score;
+	SpriteBatch::DrawString(stream.str().c_str(), _stringPosition, Color::White);
 	if (!_menu->started)
 	{
 		std::stringstream menuStream;
