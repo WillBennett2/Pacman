@@ -25,8 +25,11 @@ struct Player
 	// Data to enhance game
 	int lives;
 	int score;
+	int munchiesCollected;
+	int previousLives;
 	// Data to represent Pacman
 	Vector2* position;
+	Vector2* menuPosition;
 	Rect* sourceRect;
 	Texture2D* texture;
 	bool dead;
@@ -62,13 +65,24 @@ struct Enemy
 
 struct MovingEnemy
 {
+	//enhancing data
+	int count;
+
+	//data to represnt ghost
 	Vector2* position;
-	Texture2D* texture;
+	Vector2* menuPosition;
 	Rect* sourceRect;
-	int direction;
-	int previousDirection;
+	Texture2D* texture;
 	bool moving;
 	float speed;
+
+	//ghost animation
+	int direction;
+	int previousDirection;
+
+	int frame;
+	int currentFrameTime;
+
 };
 
 struct Menu
@@ -83,6 +97,7 @@ struct Menu
 	bool m1Down;
 
 	bool started;
+
 
 	bool randomised;
 };
@@ -111,11 +126,19 @@ private:
 	int munchieArray[MUNCHIECOUNT][2];
 
 	Enemy* _cherry;
+	Enemy* _grapefruit;
+	Enemy* _apple;
+	Enemy* _grape;
 
 	Menu* _menu;
 
 	//sound realted pointers
 	SoundEffect* _munch;
+	SoundEffect* _death;
+	SoundEffect* _levelUp;
+	SoundEffect* _gameOver;
+	SoundEffect* _bonk;
+	SoundEffect* _nextLevel;
 
 	Walls* _walls[WALLCOUNT];
 	int wallArray[WALLCOUNT][4];
@@ -125,35 +148,40 @@ private:
 
 	//constansts for animation
 	const int _cPacmanFrameTime; //keeps the animation speed constant
-
+	const int _cGhostFrameTime;
 	//Edibles animation
 	const int _cMunchieFrameTime;
-	const int _cCherryFrameTime;
 	
 	//Position for String
 	Vector2* _stringPosition;
 
-	int i, j;
-	int mCount;
+	string _currentFruit;
 
 	//input method
 	void Input(int elapsedTime, Input::KeyboardState* state,Input::MouseState* mouseState);
 
 	//check methods
-	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
-	void CheckViewportCollision();
-	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
+
 	bool CollisionCheck(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2);
-	void CheckGhostCollision();
+	void CheckDeath();
+	void CheckEnemyViewportCollision(MovingEnemy* ghost);
+	void CheckFruitCollision(int elapsedTime);
+	bool CheckGhostCollision();
+	void CheckPacmanViewportCollision(Player* pacman);
+	void CheckPaused(Input::KeyboardState* state, Input::Keys pauseKey);
+	void CheckStart(Input::KeyboardState* state, Input::Keys startKey);
 	bool CheckWallCollision(int x1, int y1, int width1, int height1);
 
-	void LoadWallCoord();
 	void LoadMunchieCoord();
+	void LoadWallCoord();
+
+	void ResetGame();
+
 	//Update methods
-	void UpdatePacman(int elapsedTime);
+	void UpdateFruit(Enemy*, int elapsedTime);
 	void UpdateGhost(MovingEnemy*, int elapsedTime);
 	void UpdateMunchie(Enemy*, int elapsedTime);
-	void UpdateCherry(int elapsedTime);
+	void UpdatePacman(int elapsedTime);
 
 public:
 	/// <summary> Constructs the Pacman class. </summary>
